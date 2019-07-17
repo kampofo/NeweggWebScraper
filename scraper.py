@@ -5,15 +5,16 @@ from pandas import DataFrame
 # get web page html
 page = requests.get('https://www.newegg.com/p/pl?N=100007709&srchInDesc=rx%202070&hisInDesc=rx%202070&ActiveSearchResult=True&PageSize=96')
 soup = BeautifulSoup(page.content, 'lxml')
+result_list = soup.find('div', class_='items-view is-grid')
+containers = result_list.find_all('div', {'class': 'item-container'}) # Create list of all individual results
 
-containers = soup.find_all('div', {'class': 'item-container'}) # Create list of all individual results
-
-field_names = ['brands', 'product names', 'prices', 'shipping costs', 'promotions']
+field_names = ['brands', 'product names', 'prices', 'shipping costs', 'promotions', 'urls']
 brands = []
 product_names = []
 prices = []
 shipping_costs = []
 promotions = [] 
+urls = []
 
 for container in containers: 
     # Retrieve Desired Fields
@@ -47,8 +48,11 @@ for container in containers:
     else:
         promotions.append('no promo')
 
+    # get urls for each result
+    urls.append(container.a['href'])
+
 # turn lists into dictionary
-data_set = dict(zip(field_names, [brands, product_names, prices, shipping_costs, promotions]))
+data_set = dict(zip(field_names, [brands, product_names, prices, shipping_costs, promotions, urls]))
 df = DataFrame(data_set, columns=field_names)
 
 df.to_csv('scraper_results.csv', header=True)
